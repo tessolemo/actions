@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Déclencher sur les push vers la branche principale
+  pull_request:
+    branches:
+      - main  # Déclencher sur les pull requests vers la branche principale
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Utiliser la dernière version d'Ubuntu
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Vérifier le code source
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12.5'  # Spécifier la version de Python
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt  # Installer les dépendances
+
+    - name: Run tests
+      run: |
+        python manage.py test  # Exécuter les tests Django
+
+    - name: Build Docker image
+      run: |
+        docker build -t tessolemo/monsite:latest .  # Construire l'image Docker
+
+    - name: Push Docker image
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        docker push tessolemo/monsite:latest  # Pousser l'image vers Docker Hub
